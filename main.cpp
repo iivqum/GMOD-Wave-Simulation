@@ -14,8 +14,12 @@ LUA_FUNCTION(OpenBSP) {
 
 	bsp_parser parser(nullptr);
 
-	parser.load(path);
-	return 1;
+	LUA->PushBool(parser.load(path));
+
+	bsp_lump<dplane_t> planes(&parser, LUMP_PLANES);
+
+	LUA->PushNumber(planes.get_length());
+	return 2;
 }
 
 GMOD_MODULE_OPEN() {

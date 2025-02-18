@@ -38,7 +38,7 @@ bool bsp_parser::load(const char* loc) {
 
 		file.read((char*)&header, sizeof(dheader_t));
 
-		if (header.ident != IDBSPHEADER || header.version != MINBSPVERSION) {
+		if (header.ident != IDBSPHEADER || header.version < MINBSPVERSION) {
 			throw ifstream::failure("Invalid VBSP");
 		}
 
