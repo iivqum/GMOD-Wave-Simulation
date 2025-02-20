@@ -10,12 +10,13 @@ using namespace std;
 	Simple BSP parser
 */
 
-class bsp_parser;
+class bsp_data;
 
+// A class that references a lump
 template <typename lump_type>
 class bsp_lump {
 public:
-	bsp_lump(bsp_parser* parser, size_t lump_id) : data((lump_type*)parser->get_lump_data(lump_id)), 
+	bsp_lump(bsp_data* parser, size_t lump_id) : data(reinterpret_cast<lump_type*>(parser->get_lump_data(lump_id))),
 		length(parser->get_num_entries(lump_id, sizeof(lump_type))) {}
 
 	size_t get_length(void) {return this->length;}
@@ -32,7 +33,8 @@ private:
 	size_t length = 0;
 };
 
-class bsp_parser {
+// Stores all BSP data as generic lump blocks
+class bsp_data {
 private:
 	// Generic data block containing lump data
 	struct lump_data {
@@ -43,9 +45,9 @@ private:
 	};
 	lump_data lumps[HEADER_LUMPS];
 public:
-	bsp_parser() = default;
-	bsp_parser(filesystem::path loc);
-	~bsp_parser(void);
+	bsp_data() = default;
+	bsp_data(filesystem::path loc);
+	~bsp_data(void);
 	// Load a BSP from file
 	bool load(filesystem::path loc);
 	// Cleanup resources

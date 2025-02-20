@@ -8,7 +8,7 @@
 
 using namespace std;
 
-bsp_parser::bsp_parser(filesystem::path loc) {
+bsp_data::bsp_data(filesystem::path loc) {
 	if (loc.empty()) {
 		return;
 	}
@@ -17,17 +17,17 @@ bsp_parser::bsp_parser(filesystem::path loc) {
 	load(loc);
 }
 
-bsp_parser::~bsp_parser() {
+bsp_data::~bsp_data() {
 	this->cleanup();
 }
 
-void bsp_parser::cleanup() {
+void bsp_data::cleanup() {
 	for (int i = 0; i < HEADER_LUMPS; i++) {
 		delete this->lumps[i].data;
 	}
 }
 
-bool bsp_parser::load(filesystem::path loc) {
+bool bsp_data::load(filesystem::path loc) {
 	/*
 		Returns true if parse was successful
 	*/
@@ -69,7 +69,7 @@ bool bsp_parser::load(filesystem::path loc) {
 	return true;
 }
 
-size_t bsp_parser::get_num_entries(size_t lump_id, size_t data_size) {
+size_t bsp_data::get_num_entries(size_t lump_id, size_t data_size) {
 	if (lump_id >= HEADER_LUMPS) {
 		return 0;
 	}
@@ -78,7 +78,7 @@ size_t bsp_parser::get_num_entries(size_t lump_id, size_t data_size) {
 	return this->lumps[lump_id].length / data_size;
 }
 
-void* bsp_parser::get_lump_data(size_t lump_id) {
+void* bsp_data::get_lump_data(size_t lump_id) {
 	if (lump_id >= HEADER_LUMPS) {
 		return nullptr;
 	}

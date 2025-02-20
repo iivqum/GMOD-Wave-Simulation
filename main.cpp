@@ -4,15 +4,15 @@
 #include <stdexcept>
 
 #include "GarrysMod/Lua/Interface.h"
+#include "GarrysMod/Lua/LuaInterface.h"
 #include "bspfile.h"
 #include "bsp_parser.h"
 
 using namespace std;
 
-
 LUA_FUNCTION(OpenBSP) {
 	filesystem::path loc = LUA->GetString(1);
-	bsp_parser parser;
+	bsp_data parser;
 	// %ls is for wide character strings such as those returned from c_str()
 	Msg("Attemping to load BSP %ls\n", loc.filename().c_str());
 	// TODO make extention case insensitive?
