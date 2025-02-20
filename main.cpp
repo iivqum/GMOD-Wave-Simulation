@@ -9,16 +9,32 @@
 
 using namespace std;
 
+
 LUA_FUNCTION(OpenBSP) {
-	const char* path = LUA->GetString(1);
+	filesystem::path loc = LUA->GetString(1);
+	bsp_parser parser;
+	// %ls is for wide character strings such as those returned from c_str()
+	Msg("Attemping to load BSP %ls\n", loc.filename().c_str());
+	// TODO make extention case insensitive?
+	if (loc.extension() != ".bsp") {
+		Warning("Warning! Passed file is not a BSP!\n");
+	}
 
-	bsp_parser parser(nullptr);
+	if (parser.load(loc)) {
+		bsp_lump<dplane_t> planes(&parser, LUMP_PLANES);
 
-	LUA->PushBool(parser.load(path));
+		LUA->PushBool(true);
+		LUA->PushNumber(planes.get_length());
 
-	bsp_lump<dplane_t> planes(&parser, LUMP_PLANES);
+		Msg("Parse Succesful!\n");
+	}
+	else {
+		LUA->PushBool(false);
+		LUA->PushNumber(-1);
 
-	LUA->PushNumber(planes.get_length());
+		Warning("Parse failed!\n");
+	}
+
 	return 2;
 }
 

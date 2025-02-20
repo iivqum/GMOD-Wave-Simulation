@@ -17,7 +17,15 @@ class bsp_lump {
 public:
 	bsp_lump(bsp_parser* parser, size_t lump_id) : data((lump_type*)parser->get_lump_data(lump_id)), 
 		length(parser->get_num_entries(lump_id, sizeof(lump_type))) {}
-	size_t get_length() {return this->length;}
+
+	size_t get_length(void) {return this->length;}
+
+	lump_type* get_entry(size_t index) {
+		if (index >= length) {
+			return nullptr;
+		}
+		return &data[index];
+	};
 private:
 	lump_type* data = nullptr;
 	// How many data structures
@@ -25,7 +33,7 @@ private:
 };
 
 class bsp_parser {
-public:
+private:
 	// Generic data block containing lump data
 	struct lump_data {
 		// Length of data block
@@ -34,10 +42,12 @@ public:
 		void* data = nullptr;
 	};
 	lump_data lumps[HEADER_LUMPS];
-	bsp_parser(const char* loc);
+public:
+	bsp_parser() = default;
+	bsp_parser(filesystem::path loc);
 	~bsp_parser(void);
 	// Load a BSP from file
-	bool load(const char* loc);
+	bool load(filesystem::path loc);
 	// Cleanup resources
 	void cleanup();
 	// Get number of data structures inside of a lump

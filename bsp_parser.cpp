@@ -8,8 +8,8 @@
 
 using namespace std;
 
-bsp_parser::bsp_parser(const char* loc = nullptr) {
-	if (loc == nullptr) {
+bsp_parser::bsp_parser(filesystem::path loc) {
+	if (loc.empty()) {
 		return;
 	}
 	// TODO make desired lumps selectable
@@ -27,7 +27,10 @@ void bsp_parser::cleanup() {
 	}
 }
 
-bool bsp_parser::load(const char* loc) {
+bool bsp_parser::load(filesystem::path loc) {
+	/*
+		Returns true if parse was successful
+	*/
 	try {
 		ifstream file;
 
@@ -38,7 +41,8 @@ bool bsp_parser::load(const char* loc) {
 
 		file.read((char*)&header, sizeof(dheader_t));
 
-		if (header.ident != IDBSPHEADER || header.version < MINBSPVERSION) {
+		// Can check header.version < MINBSPVERSION if desired
+		if (header.ident != IDBSPHEADER) {
 			throw ifstream::failure("Invalid VBSP");
 		}
 
@@ -69,6 +73,8 @@ size_t bsp_parser::get_num_entries(size_t lump_id, size_t data_size) {
 	if (lump_id >= HEADER_LUMPS) {
 		return 0;
 	}
+	// TODO data length is a multiple of data_size
+	// And ensure it can fit
 	return this->lumps[lump_id].length / data_size;
 }
 
