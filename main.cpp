@@ -21,21 +21,26 @@ LUA_FUNCTION(OpenBSP) {
 	}
 
 	if (parser.load(loc)) {
-		bsp_lump<dplane_t> planes(&parser, LUMP_PLANES);
+		bsp_octree octree(&parser);
+		Vector min, max;
+
+		octree.get_extents(&min, &max);
 
 		LUA->PushBool(true);
-		LUA->PushNumber(planes.get_length());
+		LUA->PushVector(min);
+		LUA->PushVector(max);
 
 		Msg("Parse Succesful!\n");
 	}
 	else {
 		LUA->PushBool(false);
-		LUA->PushNumber(-1);
+		LUA->PushVector(Vector());
+		LUA->PushVector(Vector());
 
 		Warning("Parse failed!\n");
 	}
 
-	return 2;
+	return 3;
 }
 
 GMOD_MODULE_OPEN() {
