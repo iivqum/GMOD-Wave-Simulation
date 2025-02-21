@@ -24,22 +24,23 @@ LUA_FUNCTION(OpenBSP) {
 
 	if (parser.load(loc)) {
 		bsp_octree octree(&parser);
-		Vector min, max;
+		//Vector min, max;
 
-		octree.get_extents(&min, &max);
+		octree.build();
 
 		// Write octree nodes to table
 
-
 		LUA->PushString("success");
 		LUA->PushBool(true);
-
 		LUA->SetTable(-3);
 
 		Msg("Parse Succesful!\n");
 	}
 	else {
-		
+		LUA->PushString("success");
+		LUA->PushBool(false);
+		LUA->SetTable(-3);
+
 		Warning("Parse failed!\n");
 	}
 

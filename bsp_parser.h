@@ -30,7 +30,7 @@ public:
 			return nullptr;
 		}
 		return &data[index];
-	};
+	}
 private:
 	lump_type* data = nullptr;
 	// How many data structures
@@ -69,7 +69,6 @@ brush faces
 
 class bsp_octree_node {
 private:
-	bsp_octree_node* leafs[8];
 	// Faces contained by this node
 	vector<dface_t*> faces;
 	// Extents of the node
@@ -77,7 +76,22 @@ private:
 	// If this node has children or not
 	bool is_leaf = true;
 public:
+	bsp_octree_node* leafs[8] = {nullptr, nullptr, nullptr,
+	nullptr, nullptr, nullptr, nullptr, nullptr};
+
+	bsp_octree_node() = default;
 	bsp_octree_node(Vector p0, Vector p1) : box_min(p0), box_max(p1) {}
+	~bsp_octree_node() {
+		this->cleanup();
+	}
+	void cleanup(void) const {
+		if (this->is_leaf) {
+			return;
+		}
+		for (int i = 0; i < 8; i++) {
+			delete leafs[i];
+		}
+	}
 	// Check if line segment intersects this node
 	bool lineseg_intersect(Vector& p0, Vector& p1) {
 		float t_min = 0;
@@ -113,12 +127,22 @@ public:
 			Vector(dims.x, this->box_max.y, dims.z));
 		this->leafs[7] = new bsp_octree_node(Vector(dims.x, dims.y, this->box_min.z),
 			Vector(this->box_max.x, this->box_max.y, dims.z));
+
+		this->is_leaf = false;
 		return true;
 	}
-	void get_extents(Vector* p0, Vector* p1) {
+	bool has_children(void) const {
+		return !this->is_leaf;
+	}
+	void get_extents(Vector* p0, Vector* p1) const {
 		*p0 = this->box_min;
 		*p1 = this->box_max;
-	};
+	}
+	void set_extents(Vector* p0, Vector* p1) {
+		this->box_min = *p0;
+		this->box_max = *p1;
+	}
+
 };
 
 class bsp_octree {
@@ -127,14 +151,13 @@ private:
 	bsp_lump<dvertex_t> vertexes;
 	bsp_lump<dedge_t> edges;
 	bsp_data* bsp;
-	//bsp_octree_node root;
+	bsp_octree_node root;
 public:
-	bsp_octree(bsp_data* data) : bsp(data), faces(data, LUMP_FACES), 
-		edges(data, LUMP_EDGES), vertexes(data, LUMP_VERTEXES) {}
+	bsp_octree(bsp_data* data) : bsp(data), faces(data, LUMP_FACES),
+		edges(data, LUMP_EDGES), vertexes(data, LUMP_VERTEXES), root() {}
 	~bsp_octree(void);
 	void cleanup(void);
-	bool build(int depth);
+	bool build(void);
 	// Get extents of all geometry
 	void get_extents(Vector* min, Vector* max);
 };
-
