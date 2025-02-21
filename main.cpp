@@ -19,6 +19,8 @@ LUA_FUNCTION(OpenBSP) {
 	if (loc.extension() != ".bsp") {
 		Warning("Warning! Passed file is not a BSP!\n");
 	}
+	//Return table
+	LUA->CreateTable();
 
 	if (parser.load(loc)) {
 		bsp_octree octree(&parser);
@@ -26,21 +28,22 @@ LUA_FUNCTION(OpenBSP) {
 
 		octree.get_extents(&min, &max);
 
+		// Write octree nodes to table
+
+
+		LUA->PushString("success");
 		LUA->PushBool(true);
-		LUA->PushVector(min);
-		LUA->PushVector(max);
+
+		LUA->SetTable(-3);
 
 		Msg("Parse Succesful!\n");
 	}
 	else {
-		LUA->PushBool(false);
-		LUA->PushVector(Vector());
-		LUA->PushVector(Vector());
-
+		
 		Warning("Parse failed!\n");
 	}
 
-	return 3;
+	return 1;
 }
 
 GMOD_MODULE_OPEN() {

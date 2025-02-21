@@ -8,7 +8,9 @@
 using namespace std;
 
 /*
-	Simple BSP parser
+Simple BSP parser
+
+TODO Add BVH
 */
 
 class bsp_data;
@@ -61,32 +63,78 @@ public:
 };
 
 /*
-	Creates an octree using the BSP data by subdividing space against
-	brush faces
+Creates an octree using the BSP data by subdividing space against
+brush faces
 */
+
+class bsp_octree_node {
+private:
+	bsp_octree_node* leafs[8];
+	// Faces contained by this node
+	vector<dface_t*> faces;
+	// Extents of the node
+	Vector box_min, box_max;
+	// If this node has children or not
+	bool is_leaf = true;
+public:
+	bsp_octree_node(Vector p0, Vector p1) : box_min(p0), box_max(p1) {}
+	// Check if line segment intersects this node
+	bool lineseg_intersect(Vector& p0, Vector& p1) {
+		float t_min = 0;
+		float t_max = INFINITY;
+		Vector d = p1 - p0;
+		for (int i = 0; i < 3; i++) {
+			float t1 = (this->box_min[i] - p0[i]) / d[i];
+			float t2 = (this->box_max[i] - p0[i]) / d[i];
+			t_min = fmax(t_min, fmin(t1, t2));
+			t_max = fmin(t_max, fmax(t1, t2));
+		}
+		return t_min < t_max;
+	}
+	bool split(void) {
+		if (!this->is_leaf) {
+			// ERROR
+			return false;
+		}
+		// TODO Optimize unnecessary initializations
+		Vector dims = (this->box_max + this->box_min) * 0.5;
+
+		this->leafs[0] = new bsp_octree_node(this->box_min, dims);
+		this->leafs[1] = new bsp_octree_node(Vector(dims.x, this->box_min.y, this->box_min.z), 
+			Vector(this->box_max.x, dims.y, dims.z));
+		this->leafs[2] = new bsp_octree_node(Vector(this->box_min.x, this->box_min.y, dims.z), 
+			Vector(dims.x, dims.y, this->box_max.z));
+		this->leafs[3] = new bsp_octree_node(Vector(dims.x, this->box_min.y, dims.z), 
+			Vector(this->box_max.x, dims.y, this->box_max.z));
+		this->leafs[4] = new bsp_octree_node(Vector(this->box_min.x, dims.y, dims.z),
+			Vector(dims.x, this->box_max.y, this->box_max.z));
+		this->leafs[5] = new bsp_octree_node(dims, this->box_max);
+		this->leafs[6] = new bsp_octree_node(Vector(this->box_min.x, dims.y, this->box_min.z),
+			Vector(dims.x, this->box_max.y, dims.z));
+		this->leafs[7] = new bsp_octree_node(Vector(dims.x, dims.y, this->box_min.z),
+			Vector(this->box_max.x, this->box_max.y, dims.z));
+		return true;
+	}
+	void get_extents(Vector* p0, Vector* p1) {
+		*p0 = this->box_min;
+		*p1 = this->box_max;
+	};
+};
+
 class bsp_octree {
 private:
-	// Octree node
-	struct node {
-		node* children[8];
-		// Faces contained by this node
-		vector<dface_t*> faces;
-		// Extents of the node
-		Vector min, max;
-	};
 	bsp_lump<dface_t> faces;
 	bsp_lump<dvertex_t> vertexes;
 	bsp_lump<dedge_t> edges;
 	bsp_data* bsp;
-	node root;
+	//bsp_octree_node root;
 public:
 	bsp_octree(bsp_data* data) : bsp(data), faces(data, LUMP_FACES), 
-		edges(data, LUMP_EDGES), vertexes(data, LUMP_VERTEXES) {
-		this->get_extents(&root.min, &root.max);
-	}
+		edges(data, LUMP_EDGES), vertexes(data, LUMP_VERTEXES) {}
 	~bsp_octree(void);
 	void cleanup(void);
-	bool build(void);
+	bool build(int depth);
 	// Get extents of all geometry
 	void get_extents(Vector* min, Vector* max);
 };
+
